@@ -26,10 +26,57 @@ class BaseCell: UICollectionViewCell {
 
 class VideoCell: BaseCell {
     
+    var video: Video? {
+        didSet{
+            titleLabel.text = video?.title
+            
+            setupThumbnailImage()
+            setupProfileImage()
+            
+//            if let  profileImageName = video?.channel?.profileImageName {
+//                userProfileImageView.image = UIImage(named: profileImageName)
+//            }
+            
+            if let channelName = video?.channel?.name, let numberOfViews = video?.numberOfViews{
+                let numberFormatter = NumberFormatter()
+                numberFormatter.numberStyle = .decimal
+                
+                //let subtitleText = "\(channelName) * \(String(describing: numberFormatter.string(from: numberOfViews))) * 2 years ago "
+                let subtitleText = channelName + " * " + numberFormatter.string(from: numberOfViews)! + " * 2 years ago "
+                subtitleTextView.text = subtitleText
+            }
+            
+            //measure title text
+            if let title = video?.title{
+                let size = CGSize(width: frame.width - 16 - 44 - 8 - 14, height: 1000)
+                let options = NSStringDrawingOptions.usesFontLeading.union(.usesLineFragmentOrigin)
+                let estimatedRect = NSString(string: title).boundingRect(with: size, options: options, attributes: [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 14)], context: nil)
+                
+                if estimatedRect.size.height > 20 {
+                    titleLabelHeightConstraint?.constant = 44
+                }else{
+                    titleLabelHeightConstraint?.constant = 20
+                }
+            }
+            
+        }
+    }
+    
+    func setupProfileImage(){
+        if let profileImageUrl = video?.channel?.profileImageName{
+            userProfileImageView.loadImageUsingUrlString(urlString: profileImageUrl)
+        }
+    }
+    
+    func setupThumbnailImage(){
+        if let thumbnailImageUrl = video?.thumbnailImageName{
+            thumbnailImageView.loadImageUsingUrlString(urlString: thumbnailImageUrl)
+        }
+    }
+    
     
     let thumbnailImageView: UIImageView = {
         let imageView = UIImageView()
-        //imageView.backgroundColor = UIColor.blue
         imageView.image = UIImage(named: "taylor_swift_reputation_2017")
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
@@ -38,38 +85,37 @@ class VideoCell: BaseCell {
     
     let userProfileImageView: UIImageView = {
         let imageView = UIImageView()
-        //imageView.backgroundColor = UIColor.green
         imageView.image = UIImage(named: "taylor_swift_profile")
         imageView.layer.cornerRadius = 22
         imageView.layer.masksToBounds = true
-        
+        imageView.contentMode = .scaleAspectFill
         return imageView
     }()
     
     let separatorView: UIView = {
         let view = UIView()
-        //view.backgroundColor = UIColor.black
         view.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1)
         return view
     }()
     
     let titleLabel: UILabel = {
         let label = UILabel()
-        //label.backgroundColor = UIColor.purple
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "Taylor Swift - Black Space"
+        label.numberOfLines = 2
         return label
     }()
     
     let subtitleTextView: UITextView = {
         let textView = UITextView()
         textView.translatesAutoresizingMaskIntoConstraints = false
-        //textView.backgroundColor = UIColor.red
         textView.text = "TayloySwift VEVO . 1,888,888,666 . 2 years ago down load"
         textView.textContainerInset = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 0)
         textView.textColor = UIColor.lightGray
         return textView
     }()
+    
+    var titleLabelHeightConstraint: NSLayoutConstraint?
     
     override func setupViews() {
         addSubview(thumbnailImageView)
@@ -82,7 +128,7 @@ class VideoCell: BaseCell {
         addConstraintsWithFormat(format: "H:|-16-[v0(44)]", views: userProfileImageView)
         
         //vertical constraints
-        addConstraintsWithFormat(format: "V:|-16-[v0]-8-[v1(44)]-16-[v2(1)]|", views: thumbnailImageView, userProfileImageView, separatorView)
+        addConstraintsWithFormat(format: "V:|-16-[v0]-8-[v1(44)]-36-[v2(1)]|", views: thumbnailImageView, userProfileImageView, separatorView)
         addConstraintsWithFormat(format: "H:|[v0]|", views: separatorView)
         
         //top constraint
@@ -92,7 +138,8 @@ class VideoCell: BaseCell {
         //right constraint
         addConstraints([NSLayoutConstraint(item: titleLabel, attribute: .right, relatedBy: .equal, toItem: thumbnailImageView, attribute: .right, multiplier: 1, constant: 0)])
         //height constraint
-        addConstraints([NSLayoutConstraint(item: titleLabel, attribute: .height, relatedBy: .equal, toItem: self, attribute: .height, multiplier: 0, constant: 20)])
+        titleLabelHeightConstraint = NSLayoutConstraint(item: titleLabel, attribute: .height, relatedBy: .equal, toItem: self, attribute: .height, multiplier: 0, constant: 44)
+        addConstraints([titleLabelHeightConstraint!])
         
         
         //top constraint
